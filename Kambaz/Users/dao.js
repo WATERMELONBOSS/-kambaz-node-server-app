@@ -11,6 +11,8 @@ export default function UsersDao(db) {
   const findUserById = (userId) => users.find((user) => user._id === userId);
   const findUserByUsername = (username) =>
     users.find((user) => user.username === username);
+  const findUserByLoginId = (loginId) =>
+    users.find((user) => user.loginId === loginId);
   const findUserByCredentials = (username, password) =>
     users.find(
       (user) => user.username === username && user.password === password
@@ -24,6 +26,7 @@ export default function UsersDao(db) {
     findAllUsers,
     findUserById,
     findUserByUsername,
+    findUserByLoginId,
     findUserByCredentials,
     updateUser,
     deleteUser,

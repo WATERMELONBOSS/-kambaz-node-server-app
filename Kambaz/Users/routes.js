@@ -44,8 +44,16 @@ export default function UserRoutes(app, db) {
   };
 
   const signin = (req, res) => {
-    const { username, password } = req.body;
-    const currentUser = dao.findUserByCredentials(username, password);
+    const { username, loginId, password } = req.body;
+    let currentUser = null;
+    if (username) {
+      currentUser = dao.findUserByCredentials(username, password);
+    } else if (loginId) {
+      const user = dao.findUserByLoginId(loginId);
+      if (user && user.password === password) {
+        currentUser = user;
+      }
+    }
     if (currentUser) {
       req.session["currentUser"] = currentUser;
       res.json(currentUser);
