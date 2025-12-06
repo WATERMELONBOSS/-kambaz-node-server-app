@@ -32,6 +32,8 @@ const corsOptions = {
     if (allowedOrigins.includes(origin)) return callback(null, true);
     // allow any localhost origin for developer convenience
     if (origin.startsWith("http://localhost")) return callback(null, true);
+    // allow any Vercel preview deployment URL
+    if (origin.includes("vercel.app")) return callback(null, true);
     return callback(new Error("Not allowed by CORS"));
   },
 };
