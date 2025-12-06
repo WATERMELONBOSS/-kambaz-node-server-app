@@ -1,11 +1,17 @@
 import { v4 as uuidv4 } from "uuid";
+import CourseModel from "./model.js";
+
 export default function CoursesDao(db) {
-  function findAllCourses() {
-    return db.courses;
+  async function findAllCourses() {
+    return await CourseModel.find({}, { name: 1, description: 1 }).lean();
   }
 
-  function findCoursesForEnrolledUser(userId) {
-    const { courses, enrollments } = db;
+  async function findCoursesForEnrolledUser(userId) {
+    const { enrollments } = db;
+    const courses = await CourseModel.find(
+      {},
+      { name: 1, description: 1 }
+    ).lean();
     const enrolledCourses = courses.filter((course) =>
       enrollments.some(
         (enrollment) =>
@@ -15,27 +21,26 @@ export default function CoursesDao(db) {
     return enrolledCourses;
   }
 
-  function createCourse(course) {
+  async function createCourse(course) {
     const newCourse = { ...course, _id: uuidv4() };
-    db.courses = [...db.courses, newCourse];
-    return newCourse;
+    const created = await CourseModel.create(newCourse);
+    return created.toObject();
   }
 
-  function deleteCourse(courseId) {
-    const { courses, enrollments } = db;
-    db.courses = courses.filter((course) => course._id !== courseId);
+  async function deleteCourse(courseId) {
+    const { enrollments } = db;
+    // remove enrollments in memory (db still used for enrollments until migrated)
     db.enrollments = enrollments.filter(
       (enrollment) => enrollment.course !== courseId
     );
-    return { success: true };
+    return await CourseModel.deleteOne({ _id: courseId });
   }
 
-  function updateCourse(courseId, courseUpdates) {
-    const { courses } = db;
-    const course = courses.find((c) => c._id === courseId);
-    if (!course) return null;
-    Object.assign(course, courseUpdates);
-    return course;
+  async function updateCourse(courseId, courseUpdates) {
+    return await CourseModel.updateOne(
+      { _id: courseId },
+      { $set: courseUpdates }
+    );
   }
 
   return {

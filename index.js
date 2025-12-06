@@ -1,5 +1,6 @@
 import "dotenv/config";
 import express from "express";
+import mongoose from "mongoose";
 import session from "express-session";
 import Hello from "./Hello.js";
 import Lab5 from "./Lab5/index.js";
@@ -11,15 +12,30 @@ import AssignmentsRoutes from "./Kambaz/Assignments/routes.js";
 import EnrollmentsRoutes from "./Kambaz/Enrollments/routes.js";
 import cors from "cors";
 
+const CONNECTION_STRING =
+  process.env.DATABASE_CONNECTION_STRING || "mongodb://127.0.0.1:27017/kambaz";
+mongoose.connect(CONNECTION_STRING);
+
 const app = express();
-app.use(
-  cors({
-    credentials: true,
-    // methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    // allowedHeaders: ["Content-Type", "Authorization"],
-    origin: process.env.CLIENT_URL || "http://localhost:3000",
-  })
-);
+// Configure CORS: allow the configured client URL in production,
+// but reflect the request origin during development so local dev ports work.
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  "http://localhost:3000",
+  // "http://localhost:3001",
+].filter(Boolean);
+const corsOptions = {
+  credentials: true,
+  origin: (origin, callback) => {
+    // allow non-browser requests like curl (no Origin)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    // allow any localhost origin for developer convenience
+    if (origin.startsWith("http://localhost")) return callback(null, true);
+    return callback(new Error("Not allowed by CORS"));
+  },
+};
+app.use(cors(corsOptions));
 
 const sessionOptions = {
   secret: process.env.SESSION_SECRET || "kambaz",

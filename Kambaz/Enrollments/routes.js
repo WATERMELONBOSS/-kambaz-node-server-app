@@ -3,32 +3,36 @@ import EnrollmentsDao from "./dao.js";
 export default function EnrollmentsRoutes(app, db) {
   const dao = EnrollmentsDao(db);
 
-  app.get("/api/courses/:courseId/enrollments", (req, res) => {
+  const findEnrollmentsForCourse = async (req, res) => {
     const { courseId } = req.params;
-    const enrollments = dao.findEnrollmentsForCourse(courseId);
+    const enrollments = await dao.findEnrollmentsForCourse(courseId);
     res.json(enrollments);
-  });
+  };
 
-  app.post("/api/courses/:courseId/enrollments", (req, res) => {
+  const createEnrollmentForCourse = async (req, res) => {
     const { courseId } = req.params;
     const { user } = req.body || {};
     if (!user) return res.status(400).json({ error: "user is required" });
-    const created = dao.enrollUserInCourse(user, courseId);
+    const created = await dao.enrollUserInCourse(user, courseId);
     res.json(created);
-  });
+  };
 
-  app.delete("/api/enrollments/:enrollmentId", (req, res) => {
+  const deleteEnrollment = async (req, res) => {
     const { enrollmentId } = req.params;
-    const result = dao.deleteEnrollment(enrollmentId);
+    const result = await dao.deleteEnrollment(enrollmentId);
     res.json(result);
-  });
+  };
 
-  app.delete("/api/courses/:courseId/enrollments", (req, res) => {
-    // allow deleting by user+course pair
+  const unenrollUser = async (req, res) => {
     const { courseId } = req.params;
     const { user } = req.body || {};
     if (!user) return res.status(400).json({ error: "user is required" });
-    const result = dao.unenrollUserFromCourse(user, courseId);
+    const result = await dao.unenrollUserFromCourse(user, courseId);
     res.json(result);
-  });
+  };
+
+  app.get("/api/courses/:courseId/enrollments", findEnrollmentsForCourse);
+  app.post("/api/courses/:courseId/enrollments", createEnrollmentForCourse);
+  app.delete("/api/enrollments/:enrollmentId", deleteEnrollment);
+  app.delete("/api/courses/:courseId/enrollments", unenrollUser);
 }
